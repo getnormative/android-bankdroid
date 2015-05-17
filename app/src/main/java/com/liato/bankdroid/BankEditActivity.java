@@ -23,6 +23,7 @@ import com.liato.bankdroid.banking.Account;
 import com.liato.bankdroid.banking.Bank;
 import com.liato.bankdroid.banking.BankChoice;
 import com.liato.bankdroid.banking.BankFactory;
+import com.liato.bankdroid.banking.DefaultProviderConfiguration;
 import com.liato.bankdroid.banking.LegacyProviderConfiguration;
 import com.liato.bankdroid.banking.exceptions.BankChoiceException;
 import com.liato.bankdroid.banking.exceptions.BankException;
@@ -31,6 +32,7 @@ import com.liato.bankdroid.db.DBAdapter;
 import com.liato.bankdroid.utils.FieldTypeMapper;
 import com.liato.bankdroid.utils.NetworkUtils;
 
+import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -38,6 +40,7 @@ import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.text.method.PasswordTransformationMethod;
@@ -105,8 +108,10 @@ public class BankEditActivity extends LockableActivity implements OnItemSelected
                 Bank bank = BankFactory.bankFromDb(BANKID, this, false);
                 if (bank != null) {
                     createForm(new LegacyProviderConfiguration(bank).getConfiguration());
+                    createForm(new DefaultProviderConfiguration().getConfiguration());
                     populateForm(bank.getProperties());
-                    mErrorDescription.setVisibility(bank.isDisabled() ? View.VISIBLE : View.INVISIBLE);
+                    mErrorDescription.setVisibility(
+                            bank.isDisabled() ? View.VISIBLE : View.INVISIBLE);
                     mBankSpinner.setSelection(adapter.getPosition(bank));
                     SELECTED_BANK = bank;
                 }
@@ -131,6 +136,7 @@ public class BankEditActivity extends LockableActivity implements OnItemSelected
         SELECTED_BANK = (Bank) parentView.getItemAtPosition(pos);
         mFormContainer.removeAllViewsInLayout();
         createForm(new LegacyProviderConfiguration(SELECTED_BANK).getConfiguration());
+        createForm(new DefaultProviderConfiguration().getConfiguration());
     }
 
     @Override
@@ -143,7 +149,6 @@ public class BankEditActivity extends LockableActivity implements OnItemSelected
             TextView fieldText = new TextView(this);
             fieldText.setText(field.getLabel());
             fieldText.setVisibility(field.isHidden() ? View.GONE : View.VISIBLE);
-            // fieldText.setId(5);
             // fieldText.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT,LayoutParams.WRAP_CONTENT));
             mFormContainer.addView(fieldText);
 

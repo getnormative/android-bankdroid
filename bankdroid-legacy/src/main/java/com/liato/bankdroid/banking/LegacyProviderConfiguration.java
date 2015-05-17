@@ -5,6 +5,7 @@ import com.liato.bankdroid.api.configuration.ProviderConfiguration;
 import com.liato.bankdroid.utils.FieldTypeMapper;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class LegacyProviderConfiguration implements ProviderConfiguration {
@@ -32,7 +33,7 @@ public class LegacyProviderConfiguration implements ProviderConfiguration {
     }
 
     private Map<String, Field> createConfiguration() {
-        Map<String, Field> configuration = new HashMap<>();
+        Map<String, Field> configuration = new LinkedHashMap<>();
         configuration.put(USERNAME, new FieldBuilder(USERNAME)
                 .label(mLegacyBank.getContext().getString(mLegacyBank.getInputTitleUsername()))
                 .placeholder(mLegacyBank.getInputHintUsername())

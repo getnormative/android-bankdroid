@@ -48,7 +48,7 @@ import eu.nullbyte.android.urllib.Urllib;
 
 public abstract class Bank implements Comparable<Bank>, IBankTypes, ProviderConfiguration {
 
-    private final ProviderConfiguration defaultConfiguration = new BasicProviderConfiguration();
+    private final ProviderConfiguration defaultConfiguration = new LegacyProviderConfiguration(this);
 
     protected String TAG = "Bank";
 
