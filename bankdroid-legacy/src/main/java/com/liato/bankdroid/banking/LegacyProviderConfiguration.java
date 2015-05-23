@@ -4,7 +4,6 @@ import com.liato.bankdroid.api.configuration.FieldBuilder;
 import com.liato.bankdroid.api.configuration.ProviderConfiguration;
 import com.liato.bankdroid.utils.FieldTypeMapper;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 

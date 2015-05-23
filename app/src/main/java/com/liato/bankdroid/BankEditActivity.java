@@ -43,6 +43,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.text.Layout;
 import android.text.method.PasswordTransformationMethod;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -62,6 +63,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -107,13 +109,14 @@ public class BankEditActivity extends LockableActivity implements OnItemSelected
             if (BANKID != -1) {
                 Bank bank = BankFactory.bankFromDb(BANKID, this, false);
                 if (bank != null) {
-                    createForm(new LegacyProviderConfiguration(bank).getConfiguration());
-                    createForm(new DefaultProviderConfiguration().getConfiguration());
-                    populateForm(bank.getProperties());
                     mErrorDescription.setVisibility(
                             bank.isDisabled() ? View.VISIBLE : View.INVISIBLE);
                     mBankSpinner.setSelection(adapter.getPosition(bank));
                     SELECTED_BANK = bank;
+                    createForm(new LegacyProviderConfiguration(SELECTED_BANK).getConfiguration(),
+                            new DefaultProviderConfiguration().getConfiguration()
+                    );
+                    populateForm(bank);
                 }
             }
         }
@@ -122,6 +125,7 @@ public class BankEditActivity extends LockableActivity implements OnItemSelected
     @OnClick(R.id.btnSettingsOk)
     public void onSubmit(View v) {
         SELECTED_BANK.setProperties(getFormParameters(SELECTED_BANK.getConfiguration().keySet()));
+        SELECTED_BANK.setCustomName(getFormParameter(DefaultProviderConfiguration.NAME));
         SELECTED_BANK.setDbid(BANKID);
         new DataRetrieverTask(this, SELECTED_BANK).execute();
     }
@@ -135,8 +139,9 @@ public class BankEditActivity extends LockableActivity implements OnItemSelected
     public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
         SELECTED_BANK = (Bank) parentView.getItemAtPosition(pos);
         mFormContainer.removeAllViewsInLayout();
-        createForm(new LegacyProviderConfiguration(SELECTED_BANK).getConfiguration());
-        createForm(new DefaultProviderConfiguration().getConfiguration());
+        createForm(new LegacyProviderConfiguration(SELECTED_BANK).getConfiguration(),
+                new DefaultProviderConfiguration().getConfiguration()
+        );
     }
 
     @Override
@@ -144,47 +149,53 @@ public class BankEditActivity extends LockableActivity implements OnItemSelected
     }
 
 
-    private void createForm(Map<String, Field> configuration) {
-        for(Field field : configuration.values()) {
-            TextView fieldText = new TextView(this);
-            fieldText.setText(field.getLabel());
-            fieldText.setVisibility(field.isHidden() ? View.GONE : View.VISIBLE);
-            // fieldText.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT,LayoutParams.WRAP_CONTENT));
-            mFormContainer.addView(fieldText);
+    private void createForm(Map<String, Field>... configurations) {
+        for(int i = 0; i< configurations.length; i++) {
+            for (Field field : configurations[i].values()) {
+                TextView fieldText = new TextView(this);
+                fieldText.setText(field.getLabel());
+                fieldText.setVisibility(field.isHidden() ? View.GONE : View.VISIBLE);
+                // fieldText.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT,LayoutParams.WRAP_CONTENT));
+                mFormContainer.addView(fieldText);
 
-            EditText inputField = new EditText(this);
-            inputField.setHint(field.getPlaceholder());
-            if(field.isEncrypted()) {
-                inputField.setTransformationMethod(PasswordTransformationMethod.getInstance());
-            } else {
-                inputField.setInputType(FieldTypeMapper.fromFieldType(field.getFieldType()));
+                EditText inputField = new EditText(this);
+                inputField.setHint(field.getPlaceholder());
+                if (field.isEncrypted()) {
+                    inputField.setTransformationMethod(PasswordTransformationMethod.getInstance());
+                } else {
+                    inputField.setInputType(FieldTypeMapper.fromFieldType(field.getFieldType()));
+                }
+                inputField.setVisibility(field.isHidden() ? View.GONE : View.VISIBLE);
+                inputField.setTag(field.getReference());
+
+                mFormContainer.addView(inputField);
             }
-            inputField.setVisibility(field.isHidden() ? View.GONE : View.VISIBLE);
-            inputField.setTag(field.getReference());
-
-            mFormContainer.addView(inputField);
         }
     }
 
-    private void populateForm(Map<String, String> properties) {
-        View base = findViewById(R.id.layoutBankConfiguration);
-        for(Map.Entry<String, String> property : properties.entrySet()) {
-            EditText propertyInput = (EditText) base.findViewWithTag(property.getKey());
+    private void populateForm(Bank bank) {
+        EditText customName = (EditText) mFormContainer.findViewWithTag(DefaultProviderConfiguration.NAME);
+        customName.setText(bank.getCustomName());
+
+        for(Map.Entry<String, String> property : bank.getProperties().entrySet()) {
+            EditText propertyInput = (EditText) mFormContainer.findViewWithTag(property.getKey());
             propertyInput.setText(property.getValue());
         }
     }
 
     private Map<String, String> getFormParameters(Set<String> propertyNames) {
-        View base = findViewById(R.id.layoutBankConfiguration);
         Map<String, String> properties = new HashMap<>();
         for(String property : propertyNames) {
-            EditText propertyInput = (EditText) base.findViewWithTag(property);
-            properties.put(property,
-                    propertyInput.getText().toString().trim());
+            properties.put(property, getFormParameter(property));
         }
         return properties;
     }
-    
+
+    private String getFormParameter(String property) {
+        EditText propertyInput = (EditText) mFormContainer.findViewWithTag(property);
+        return propertyInput.getText().toString().trim();
+    }
+
     private class BankSpinnerAdapter<T> extends ArrayAdapter<T> {
 
         private LayoutInflater inflater;
