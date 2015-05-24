@@ -46,7 +46,7 @@ import java.util.Map;
 
 import eu.nullbyte.android.urllib.Urllib;
 
-public abstract class Bank implements Comparable<Bank>, IBankTypes, ProviderConfiguration {
+public abstract class Bank implements Comparable<Bank>, IBankTypes {
 
     private final ProviderConfiguration defaultConfiguration = new LegacyProviderConfiguration(this);
 

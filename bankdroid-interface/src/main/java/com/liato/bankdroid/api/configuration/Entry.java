@@ -17,4 +17,26 @@ public class Entry {
     public String getValue() {
         return mValue;
     }
+
+    @Override
+    public String toString() {
+        return mValue;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (obj == null || obj.getClass() != this.getClass()) {
+            return false;
+        }
+        Entry other = (Entry) obj;
+        return mKey.equals(other.mKey);
+    }
+
+    @Override
+    public int hashCode() {
+        return mKey.hashCode();
+    }
 }

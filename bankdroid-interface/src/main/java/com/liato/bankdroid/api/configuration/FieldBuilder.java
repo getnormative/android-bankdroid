@@ -1,5 +1,6 @@
 package com.liato.bankdroid.api.configuration;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -48,6 +49,11 @@ public class FieldBuilder {
         return this;
     }
 
+    public FieldBuilder values(List<Entry> values) {
+        field.values = values;
+        return this;
+    }
+
     public FieldBuilder validator(FieldValidator validator) {
         field.validator = validator;
         return this;
@@ -68,6 +74,8 @@ public class FieldBuilder {
         private boolean hidden;
 
         private boolean encrypted;
+
+        private List<Entry> values;
 
         private FieldValidator validator;
 
@@ -108,6 +116,14 @@ public class FieldBuilder {
         @Override
         public boolean isEncrypted() {
             return encrypted;
+        }
+
+        @Override
+        public List<Entry> getValues() {
+            if(values == null) {
+                values = new ArrayList<>();
+            };
+            return values;
         }
 
         @Override

@@ -19,6 +19,7 @@ package com.liato.bankdroid;
 import com.google.common.collect.Iterators;
 
 import com.crashlytics.android.Crashlytics;
+import com.liato.bankdroid.api.configuration.Entry;
 import com.liato.bankdroid.api.configuration.Field;
 import com.liato.bankdroid.appwidget.AutoRefreshService;
 import com.liato.bankdroid.banking.Account;
@@ -111,8 +112,8 @@ public class BankEditActivity extends LockableActivity implements OnItemSelected
                     mBankSpinner.setEnabled(false);
                     mBankSpinner.setSelection(adapter.getPosition(bank));
                     SELECTED_BANK = bank;
-                    createForm(new LegacyProviderConfiguration(SELECTED_BANK).getConfiguration(),
-                            new DefaultProviderConfiguration().getConfiguration()
+                    createForm(SELECTED_BANK.getConfiguration(),
+                            DefaultProviderConfiguration.fields()
                     );
                     populateForm(bank);
                 }
@@ -140,8 +141,8 @@ public class BankEditActivity extends LockableActivity implements OnItemSelected
     public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
         SELECTED_BANK = (Bank) parentView.getItemAtPosition(pos);
         mFormContainer.removeAllViewsInLayout();
-        createForm(new LegacyProviderConfiguration(SELECTED_BANK).getConfiguration(),
-                new DefaultProviderConfiguration().getConfiguration()
+        createForm(SELECTED_BANK.getConfiguration(),
+                DefaultProviderConfiguration.fields()
         );
     }
 
@@ -154,22 +155,31 @@ public class BankEditActivity extends LockableActivity implements OnItemSelected
         for(int i = 0; i< configurations.length; i++) {
             for (Field field : configurations[i]) {
                 TextView fieldText = new TextView(this);
-                fieldText.setText(field.getLabel() + (field.isRequired() ? " *" : ""));
+                fieldText.setText(field.getLabel());
                 fieldText.setVisibility(field.isHidden() ? View.GONE : View.VISIBLE);
                 // fieldText.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT,LayoutParams.WRAP_CONTENT));
                 mFormContainer.addView(fieldText);
 
-                EditText inputField = new EditText(this);
-                inputField.setHint(field.getPlaceholder());
-                if (field.isEncrypted()) {
-                    inputField.setTransformationMethod(PasswordTransformationMethod.getInstance());
+                if(!field.getValues().isEmpty()) {
+                    Spinner spinner = new Spinner(this);
+                    spinner.setAdapter(new ArrayAdapter<Entry>(this, android.R.layout.simple_spinner_item , field.getValues()));
+                    spinner.setTag(field.getReference());
+                    mFormContainer.addView(spinner);
                 } else {
-                    inputField.setInputType(FieldTypeMapper.fromFieldType(field.getFieldType()));
-                }
-                inputField.setVisibility(field.isHidden() ? View.GONE : View.VISIBLE);
-                inputField.setTag(field.getReference());
+                    EditText inputField = new EditText(this);
+                    inputField.setHint(field.getPlaceholder());
+                    if (field.isEncrypted()) {
+                        inputField.setTransformationMethod(
+                                PasswordTransformationMethod.getInstance());
+                    } else {
+                        inputField
+                                .setInputType(FieldTypeMapper.fromFieldType(field.getFieldType()));
+                    }
+                    inputField.setVisibility(field.isHidden() ? View.GONE : View.VISIBLE);
+                    inputField.setTag(field.getReference());
 
-                mFormContainer.addView(inputField);
+                    mFormContainer.addView(inputField);
+                }
             }
         }
     }
@@ -200,7 +210,7 @@ public class BankEditActivity extends LockableActivity implements OnItemSelected
     private boolean validate() {
         boolean valid = true;
         Iterator<Field> fields = Iterators.concat(SELECTED_BANK.getConfiguration().iterator(),
-                new DefaultProviderConfiguration().getConfiguration().iterator());
+                DefaultProviderConfiguration.fields().iterator());
         while(fields.hasNext()) {
             Field field = fields.next();
             try {

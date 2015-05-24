@@ -18,5 +18,7 @@ public interface Field {
 
     boolean isEncrypted();
 
+    List<Entry> getValues();
+
     void validate(String value) throws IllegalArgumentException;
 }
