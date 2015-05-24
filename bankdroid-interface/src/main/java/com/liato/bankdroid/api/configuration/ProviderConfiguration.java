@@ -1,9 +1,7 @@
 package com.liato.bankdroid.api.configuration;
 
-import java.util.Map;
+import java.util.List;
 
 public interface ProviderConfiguration {
-
-    Map<String, Field> getConfiguration();
-
+    List<Field> getConfiguration();
 }

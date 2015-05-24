@@ -367,7 +367,7 @@ public abstract class Bank implements Comparable<Bank>, IBankTypes, ProviderConf
         return this.getName().compareToIgnoreCase(another.getName());
     }
 
-    public Map<String, Field> getConfiguration() {
+    public List<Field> getConfiguration() {
         return defaultConfiguration.getConfiguration();
     }
 

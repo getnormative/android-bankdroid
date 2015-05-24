@@ -16,6 +16,8 @@
 
 package com.liato.bankdroid;
 
+import com.google.common.collect.Iterators;
+
 import com.crashlytics.android.Crashlytics;
 import com.liato.bankdroid.api.configuration.Field;
 import com.liato.bankdroid.appwidget.AutoRefreshService;
@@ -32,7 +34,6 @@ import com.liato.bankdroid.db.DBAdapter;
 import com.liato.bankdroid.utils.FieldTypeMapper;
 import com.liato.bankdroid.utils.NetworkUtils;
 
-import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -40,14 +41,11 @@ import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.text.Layout;
 import android.text.method.PasswordTransformationMethod;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.AdapterView;
@@ -63,10 +61,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
@@ -111,6 +108,7 @@ public class BankEditActivity extends LockableActivity implements OnItemSelected
                 if (bank != null) {
                     mErrorDescription.setVisibility(
                             bank.isDisabled() ? View.VISIBLE : View.INVISIBLE);
+                    mBankSpinner.setEnabled(false);
                     mBankSpinner.setSelection(adapter.getPosition(bank));
                     SELECTED_BANK = bank;
                     createForm(new LegacyProviderConfiguration(SELECTED_BANK).getConfiguration(),
@@ -124,7 +122,10 @@ public class BankEditActivity extends LockableActivity implements OnItemSelected
 
     @OnClick(R.id.btnSettingsOk)
     public void onSubmit(View v) {
-        SELECTED_BANK.setProperties(getFormParameters(SELECTED_BANK.getConfiguration().keySet()));
+        if(!validate()) {
+            return;
+        }
+        SELECTED_BANK.setProperties(getFormParameters(SELECTED_BANK.getConfiguration()));
         SELECTED_BANK.setCustomName(getFormParameter(DefaultProviderConfiguration.NAME));
         SELECTED_BANK.setDbid(BANKID);
         new DataRetrieverTask(this, SELECTED_BANK).execute();
@@ -149,11 +150,11 @@ public class BankEditActivity extends LockableActivity implements OnItemSelected
     }
 
 
-    private void createForm(Map<String, Field>... configurations) {
+    private void createForm(List<Field>... configurations) {
         for(int i = 0; i< configurations.length; i++) {
-            for (Field field : configurations[i].values()) {
+            for (Field field : configurations[i]) {
                 TextView fieldText = new TextView(this);
-                fieldText.setText(field.getLabel());
+                fieldText.setText(field.getLabel() + (field.isRequired() ? " *" : ""));
                 fieldText.setVisibility(field.isHidden() ? View.GONE : View.VISIBLE);
                 // fieldText.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT,LayoutParams.WRAP_CONTENT));
                 mFormContainer.addView(fieldText);
@@ -183,10 +184,10 @@ public class BankEditActivity extends LockableActivity implements OnItemSelected
         }
     }
 
-    private Map<String, String> getFormParameters(Set<String> propertyNames) {
+    private Map<String, String> getFormParameters(List<Field> fields) {
         Map<String, String> properties = new HashMap<>();
-        for(String property : propertyNames) {
-            properties.put(property, getFormParameter(property));
+        for(Field field : fields) {
+            properties.put(field.getReference(), getFormParameter(field.getReference()));
         }
         return properties;
     }
@@ -194,6 +195,22 @@ public class BankEditActivity extends LockableActivity implements OnItemSelected
     private String getFormParameter(String property) {
         EditText propertyInput = (EditText) mFormContainer.findViewWithTag(property);
         return propertyInput.getText().toString().trim();
+    }
+
+    private boolean validate() {
+        boolean valid = true;
+        Iterator<Field> fields = Iterators.concat(SELECTED_BANK.getConfiguration().iterator(),
+                new DefaultProviderConfiguration().getConfiguration().iterator());
+        while(fields.hasNext()) {
+            Field field = fields.next();
+            try {
+                field.validate(getFormParameter(field.getReference()));
+            } catch (IllegalArgumentException e) {
+                valid = false;
+                ((EditText)mFormContainer.findViewWithTag(field.getReference())).setError(e.getMessage());
+            }
+        }
+        return valid;
     }
 
     private class BankSpinnerAdapter<T> extends ArrayAdapter<T> {

@@ -48,11 +48,6 @@ public class FieldBuilder {
         return this;
     }
 
-    public FieldBuilder values(Entry... values) {
-        field.values = Arrays.asList(values);
-        return this;
-    }
-
     public FieldBuilder validator(FieldValidator validator) {
         field.validator = validator;
         return this;
@@ -73,8 +68,6 @@ public class FieldBuilder {
         private boolean hidden;
 
         private boolean encrypted;
-
-        private List<Entry> values;
 
         private FieldValidator validator;
 
@@ -118,15 +111,10 @@ public class FieldBuilder {
         }
 
         @Override
-        public List<Entry> getValues() {
-            return values;
-        }
-
-        @Override
         public void validate(String value) throws IllegalArgumentException {
             if(isRequired()) {
                 if(value == null || value.isEmpty()) {
-                    throw new IllegalArgumentException(String.format("The %s is required", getLabel()));
+                    throw new IllegalArgumentException(String.format("%s is required", getLabel()));
                 }
                 if(validator != null) {
                     validator.validate(value);

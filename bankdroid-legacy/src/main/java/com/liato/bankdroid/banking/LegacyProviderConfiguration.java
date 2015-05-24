@@ -5,6 +5,8 @@ import com.liato.bankdroid.api.configuration.ProviderConfiguration;
 import com.liato.bankdroid.utils.FieldTypeMapper;
 
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 public class LegacyProviderConfiguration implements ProviderConfiguration {
@@ -15,7 +17,7 @@ public class LegacyProviderConfiguration implements ProviderConfiguration {
 
     public static final String EXTRAS = "legacy.extras";
 
-    private Map<String, Field> mConfiguration;
+    private List<Field> mConfiguration;
 
     private Bank mLegacyBank;
 
@@ -24,16 +26,16 @@ public class LegacyProviderConfiguration implements ProviderConfiguration {
     }
 
     @Override
-    public Map<String, Field> getConfiguration() {
+    public List<Field> getConfiguration() {
         if (mConfiguration == null) {
             mConfiguration = createConfiguration();
         }
         return mConfiguration;
     }
 
-    private Map<String, Field> createConfiguration() {
-        Map<String, Field> configuration = new LinkedHashMap<>();
-        configuration.put(USERNAME, new FieldBuilder(USERNAME)
+    private List<Field> createConfiguration() {
+        List<Field> configuration = new LinkedList<>();
+        configuration.add(new FieldBuilder(USERNAME)
                 .label(mLegacyBank.getContext().getString(mLegacyBank.getInputTitleUsername()))
                 .placeholder(mLegacyBank.getInputHintUsername())
                 .hidden(mLegacyBank.isInputUsernameHidden())
@@ -41,7 +43,7 @@ public class LegacyProviderConfiguration implements ProviderConfiguration {
                 .fieldType(FieldTypeMapper.toFieldType(mLegacyBank.getInputTypeUsername()))
                 .build());
 
-        configuration.put(PASSWORD, new FieldBuilder(PASSWORD)
+        configuration.add(new FieldBuilder(PASSWORD)
                 .label(mLegacyBank.getContext().getString(mLegacyBank.getInputTitlePassword()))
                 .hidden(mLegacyBank.isInputPasswordHidden())
                 .encrypted(true)
@@ -49,7 +51,7 @@ public class LegacyProviderConfiguration implements ProviderConfiguration {
                 .fieldType(FieldTypeMapper.toFieldType(mLegacyBank.getInputTypePassword()))
                 .build());
 
-        configuration.put(EXTRAS, new FieldBuilder(EXTRAS)
+        configuration.add(new FieldBuilder(EXTRAS)
                 .label(mLegacyBank.getContext().getString(mLegacyBank.getInputTitleExtras()))
                 .hidden(mLegacyBank.isInputExtrasHidden())
                 .fieldType(FieldTypeMapper.toFieldType(mLegacyBank.getInputTypeExtras()))
