@@ -1,5 +1,7 @@
 package com.liato.bankdroid.api.configuration;
 
+import java.util.List;
+
 public interface Field {
 
     String getReference();
@@ -15,4 +17,8 @@ public interface Field {
     boolean isHidden();
 
     boolean isEncrypted();
+
+    List<Entry> getValues();
+
+    void validate(String value) throws IllegalArgumentException;
 }
