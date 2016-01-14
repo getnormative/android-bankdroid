@@ -33,6 +33,7 @@ import org.jsoup.select.Elements;
 
 import android.content.Context;
 import android.text.InputType;
+import android.util.Log;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -154,6 +155,9 @@ public class Bioklubben extends Bank {
             }
         }
         a.setTransactions(transactions);
+        for(Transaction transaction : transactions){
+            Log.i("BioKlubben",  transaction.getTransaction());
+        }
 
         if (accounts.isEmpty()) {
             throw new BankException(res.getText(R.string.no_accounts_found).toString());
